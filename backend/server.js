@@ -3,10 +3,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const disasterRoutes = require('./routes/disasterRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,13 +26,22 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API documentation for the backend services including authentication.',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
     servers: [
       {
         url: `http://localhost:${PORT}`,
       },
     ],
   },
-  apis: ['./routes/*.js'],
+  apis: [path.posix.join(__dirname.split(path.sep).join('/'), 'routes', '*.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -40,6 +51,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/disaster', disasterRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 connectDB()
